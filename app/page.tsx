@@ -196,68 +196,83 @@ export default function Home() {
   const [issueDate, setIssueDate] = useState('')
   const [certId] = useState(genCertId)
   const [loading, setLoading] = useState(false)
+  const [printing, setPrinting] = useState(false)
   const [flash, setFlash] = useState(false)
 
   useEffect(() => {
     setIssueDate(new Date().toISOString().split('T')[0])
   }, [])
 
-  async function generatePDF() {
-    if (loading) return
-    setLoading(true)
-
-    // Dynamic imports to avoid SSR issues
+  async function buildPDF() {
     const html2canvas = (await import('html2canvas')).default
     const { jsPDF } = await import('jspdf')
 
+    const certEl = document.getElementById('certificate') as HTMLElement
+    if (!certEl) return null
+
+    const origRadius = certEl.style.borderRadius
+    const origOverflow = certEl.style.overflow
+    certEl.style.borderRadius = '0'
+    certEl.style.overflow = 'visible'
+
+    const canvas = await html2canvas(certEl, {
+      scale: 4,
+      useCORS: true,
+      backgroundColor: '#5AAFC0',
+      logging: false,
+    })
+
+    certEl.style.borderRadius = origRadius
+    certEl.style.overflow = origOverflow
+
+    const imgData = canvas.toDataURL('image/jpeg', 1.0)
+
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+    const W = pdf.internal.pageSize.getWidth()
+    const H = pdf.internal.pageSize.getHeight()
+
+    pdf.setFillColor(90, 175, 192)
+    pdf.rect(0, 0, W, H, 'F')
+
+    const certW = W - 20
+    const certH = certW / 1.414
+    const xOff = 10
+    const yOff = (H - certH) / 2
+
+    pdf.addImage(imgData, 'JPEG', xOff, yOff, certW, certH)
+    return pdf
+  }
+
+  async function generatePDF() {
+    if (loading || printing) return
+    setLoading(true)
     try {
-      const certEl = document.getElementById('certificate') as HTMLElement
-      if (!certEl) return
-
-      // Temporarily remove border-radius so html2canvas doesn't produce white curved corners
-      const origRadius = certEl.style.borderRadius
-      const origOverflow = certEl.style.overflow
-      certEl.style.borderRadius = '0'
-      certEl.style.overflow = 'visible'
-
-      const canvas = await html2canvas(certEl, {
-        scale: 4,
-        useCORS: true,
-        backgroundColor: '#5AAFC0',
-        logging: false,
-      })
-
-      // Restore styles
-      certEl.style.borderRadius = origRadius
-      certEl.style.overflow = origOverflow
-
-      const imgData = canvas.toDataURL('image/jpeg', 1.0)
-
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-      const W = pdf.internal.pageSize.getWidth()
-      const H = pdf.internal.pageSize.getHeight()
-
-      // Fill page background to match cert color
-      pdf.setFillColor(90, 175, 192)
-      pdf.rect(0, 0, W, H, 'F')
-
-      // Place certificate centered with rounded corners clipped by the PDF rect
-      const certW = W - 20
-      const certH = certW / 1.414
-      const xOff = 10
-      const yOff = (H - certH) / 2
-
-      pdf.addImage(imgData, 'JPEG', xOff, yOff, certW, certH)
+      const pdf = await buildPDF()
+      if (!pdf) return
       pdf.save(`EnglishFuture_Certificate_${(name || 'Student').replace(/\s+/g, '_')}.pdf`)
-
       setFlash(true)
       setTimeout(() => setFlash(false), 700)
     } catch (e) {
       console.error(e)
       alert('Error generating PDF: ' + (e as Error).message)
     }
-
     setLoading(false)
+  }
+
+  async function printPDF() {
+    if (loading || printing) return
+    setPrinting(true)
+    try {
+      const pdf = await buildPDF()
+      if (!pdf) return
+      const blobUrl = pdf.output('bloburl') as string
+      const win = window.open(blobUrl)
+      if (win) win.onload = () => win.print()
+    } catch (e) {
+      console.error(e)
+      alert('Error printing PDF: ' + (e as Error).message)
+    }
+    setPrinting(false)
   }
 
   return (
@@ -337,12 +352,18 @@ export default function Home() {
             />
           </div>
 
-          <button className="btn-generate" onClick={generatePDF} disabled={loading}>
-            {loading
-              ? <div className="loader" />
-              : <span>⬇ &nbsp; Generate &amp; Download PDF</span>
-            }
-          </button>
+          <div className="btn-row">
+            <button className="btn-generate" onClick={generatePDF} disabled={loading}>
+              {loading
+                ? <div className="loader" />
+                : <span>⬇ &nbsp; Download PDF</span>
+              }
+            </button>
+
+            <button className="btn-print" onClick={printPDF} disabled={printing || loading}>
+              {printing ? <div className="loader" /> : '🖨 \u00a0 Print'}
+            </button>
+          </div>
         </div>
 
         {/* ── PREVIEW ── */}
