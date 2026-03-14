@@ -1,389 +1,322 @@
 'use client'
 
-import { useState, useEffect, KeyboardEvent } from 'react'
+import Link from 'next/link'
+import { useState } from 'react'
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-function genCertId() {
-  return `ENG-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`
+type Lang = 'ru' | 'en' | 'ar'
+
+const T = {
+  ru: {
+    dir: 'ltr' as const,
+    schoolOf: 'Школа английского',
+    navCourses: 'Курсы',
+    navWhy: 'О нас',
+    navCert: 'Генератор сертификатов',
+    badge: '🇬🇧 Британский английский высшего уровня',
+    heroLine1: 'Открой своё',
+    heroSub: 'Профессиональные курсы английского, которые ведут от нуля до свободного владения. Опытные преподаватели, структурированная программа и международно признанные сертификаты.',
+    heroCta1: 'Смотреть курсы',
+    heroCta2: 'Создать сертификат',
+    quote: '«Границы моего языка означают границы моего мира.»',
+    quoteAuthor: '— Людвиг Витгенштейн',
+    float1: '📚 7 курсов',
+    float2: '🏆 Сертификаты',
+    float3: '🌍 40+ стран',
+    stat1lbl: 'Выпускников',
+    stat2lbl: 'Курсов',
+    stat3lbl: 'Уровней',
+    stat4lbl: 'Довольных студентов',
+    coursesEyebrow: 'Что мы предлагаем',
+    coursesTitle: 'Наши курсы',
+    coursesSub: 'От нуля до свободного владения — курс для каждого этапа вашего пути.',
+    whyEyebrow: 'Почему English Future',
+    whyTitle: 'Учитесь с уверенностью',
+    whySub: 'Мы сочетаем проверенные методы обучения с современными инструментами и личным вниманием к каждому студенту.',
+    ctaTitle: 'Готовы выдать сертификат?',
+    ctaSub: 'Создайте профессиональный персонализированный сертификат English Future за считанные секунды.',
+    ctaBtn: 'Открыть генератор сертификатов →',
+    footerCopy: `© ${new Date().getFullYear()} English Future. Все права защищены.`,
+    courses: [
+      { title: 'Английский с нуля', level: 'Начальный', icon: '🌱', desc: 'Начните путь к английскому с самых основ — уверенно и без стресса.' },
+      { title: 'Разговорный английский', level: 'Начальный – Средний', icon: '💬', desc: 'Говорите естественно в повседневных ситуациях и реальных разговорах.' },
+      { title: 'Деловой английский', level: 'Средний – Продвинутый', icon: '💼', desc: 'Освойте профессиональное общение для современного бизнеса.' },
+      { title: 'Академическое письмо', level: 'Выше среднего', icon: '✍️', desc: 'Пишите чёткие, структурированные эссе и научные работы.' },
+      { title: 'Подготовка к IELTS', level: 'Все уровни', icon: '🎯', desc: 'Целенаправленные стратегии для достижения нужного балла.' },
+      { title: 'Английский для специалистов', level: 'Продвинутый', icon: '🏆', desc: 'Профессиональный язык для инженеров, врачей и руководителей.' },
+      { title: 'Продвинутая коммуникация', level: 'Продвинутый – Свободное владение', icon: '⭐', desc: 'Отточите беглость речи и освойте высокий стиль выражения.' },
+    ],
+    features: [
+      { icon: '🎓', title: 'Сертифицированные преподаватели', desc: 'Учитесь у опытных квалифицированных специалистов британского английского.' },
+      { icon: '📱', title: 'Гибкое обучение', desc: 'Занимайтесь в своём темпе — онлайн или очно.' },
+      { icon: '🌍', title: 'Международное сообщество', desc: 'Присоединяйтесь к студентам из более чем 40 стран.' },
+      { icon: '📜', title: 'Признанные сертификаты', desc: 'Получайте сертификаты, которые ценят работодатели по всему миру.' },
+    ],
+  },
+  en: {
+    dir: 'ltr' as const,
+    schoolOf: 'School of English',
+    navCourses: 'Courses',
+    navWhy: 'Why Us',
+    navCert: 'Certificate Generator',
+    badge: '🇬🇧 British English Excellence',
+    heroLine1: 'Unlock Your',
+    heroSub: 'Professional English courses designed to take you from beginner to fluent. Expert instructors, structured curriculum, and internationally recognised certificates.',
+    heroCta1: 'Explore Courses',
+    heroCta2: 'Generate Certificate',
+    quote: '"The limits of my language mean the limits of my world."',
+    quoteAuthor: '— Ludwig Wittgenstein',
+    float1: '📚 7 Courses',
+    float2: '🏆 Certified',
+    float3: '🌍 40+ Countries',
+    stat1lbl: 'Graduates',
+    stat2lbl: 'Courses',
+    stat3lbl: 'Levels',
+    stat4lbl: 'Satisfaction',
+    coursesEyebrow: 'What We Offer',
+    coursesTitle: 'Our Courses',
+    coursesSub: 'From zero to fluency — a course for every stage of your English journey.',
+    whyEyebrow: 'Why English Future',
+    whyTitle: 'Learn With Confidence',
+    whySub: 'We combine proven teaching methods with modern tools and personal attention to every student.',
+    ctaTitle: 'Ready to Issue a Certificate?',
+    ctaSub: 'Generate a professional, personalised English Future certificate in seconds.',
+    ctaBtn: 'Open Certificate Generator →',
+    footerCopy: `© ${new Date().getFullYear()} English Future. All rights reserved.`,
+    courses: [
+      { title: 'English from Zero', level: 'Beginner', icon: '🌱', desc: 'Start your English journey from absolute basics with confidence.' },
+      { title: 'Conversational English', level: 'Elementary–Intermediate', icon: '💬', desc: 'Speak naturally in everyday situations and real-life conversations.' },
+      { title: 'Business English Mastery', level: 'Intermediate–Advanced', icon: '💼', desc: 'Master professional communication for the modern workplace.' },
+      { title: 'Academic English Writing', level: 'Upper-Intermediate', icon: '✍️', desc: 'Write clear, structured essays and academic papers with precision.' },
+      { title: 'IELTS Preparation', level: 'All Levels', icon: '🎯', desc: 'Targeted strategies to achieve your target band score.' },
+      { title: 'English for Professionals', level: 'Advanced', icon: '🏆', desc: 'Industry-specific language for engineers, doctors, and executives.' },
+      { title: 'Advanced Communication', level: 'Advanced–Proficiency', icon: '⭐', desc: 'Refine your fluency and master nuanced, high-level expression.' },
+    ],
+    features: [
+      { icon: '🎓', title: 'Certified Instructors', desc: 'Learn from experienced, qualified British English specialists.' },
+      { icon: '📱', title: 'Flexible Learning', desc: 'Study at your own pace — online or in-person classes available.' },
+      { icon: '🌍', title: 'Global Community', desc: 'Join students from over 40 countries in interactive group sessions.' },
+      { icon: '📜', title: 'Recognised Certificates', desc: 'Earn certificates valued by employers and institutions worldwide.' },
+    ],
+  },
+  ar: {
+    dir: 'rtl' as const,
+    schoolOf: 'مدرسة اللغة الإنجليزية',
+    navCourses: 'الدورات',
+    navWhy: 'لماذا نحن',
+    navCert: 'مولّد الشهادات',
+    badge: '🇬🇧 تميّز اللغة الإنجليزية البريطانية',
+    heroLine1: 'افتح مستقبلك مع',
+    heroSub: 'دورات إنجليزية احترافية تأخذك من الصفر إلى الطلاقة. مدرّسون خبراء، منهج منظّم، وشهادات معترف بها دولياً.',
+    heroCta1: 'استعرض الدورات',
+    heroCta2: 'إنشاء شهادة',
+    quote: '«حدود لغتي تعني حدود عالمي.»',
+    quoteAuthor: '— لودفيغ فيتغنشتاين',
+    float1: '📚 ٧ دورات',
+    float2: '🏆 شهادات معتمدة',
+    float3: '🌍 ٤٠+ دولة',
+    stat1lbl: 'خريج',
+    stat2lbl: 'دورة',
+    stat3lbl: 'مستوى',
+    stat4lbl: 'نسبة الرضا',
+    coursesEyebrow: 'ما نقدّمه',
+    coursesTitle: 'دوراتنا',
+    coursesSub: 'من الصفر إلى الطلاقة — دورة لكل مرحلة في رحلتك مع الإنجليزية.',
+    whyEyebrow: 'لماذا English Future',
+    whyTitle: 'تعلّم بثقة',
+    whySub: 'نجمع بين أساليب تدريس مجرّبة وأدوات حديثة واهتمام شخصي بكل طالب.',
+    ctaTitle: 'هل أنت مستعد لإصدار شهادة؟',
+    ctaSub: 'أنشئ شهادة English Future احترافية ومخصّصة في ثوانٍ معدودة.',
+    ctaBtn: '← فتح مولّد الشهادات',
+    footerCopy: `© ${new Date().getFullYear()} English Future. جميع الحقوق محفوظة.`,
+    courses: [
+      { title: 'الإنجليزية من الصفر', level: 'مبتدئ', icon: '🌱', desc: 'ابدأ رحلتك مع الإنجليزية من الأساسيات بثقة وبدون ضغط.' },
+      { title: 'الإنجليزية المحادثاتية', level: 'مبتدئ – متوسط', icon: '💬', desc: 'تحدّث بشكل طبيعي في المواقف اليومية والمحادثات الحقيقية.' },
+      { title: 'إتقان الإنجليزية التجارية', level: 'متوسط – متقدم', icon: '💼', desc: 'أتقن التواصل المهني في بيئة العمل الحديثة.' },
+      { title: 'الكتابة الأكاديمية', level: 'فوق المتوسط', icon: '✍️', desc: 'اكتب مقالات وأوراقاً أكاديمية واضحة ومنظّمة بدقة.' },
+      { title: 'التحضير لـ IELTS', level: 'جميع المستويات', icon: '🎯', desc: 'استراتيجيات موجّهة لتحقيق الدرجة المستهدفة.' },
+      { title: 'الإنجليزية للمتخصصين', level: 'متقدم', icon: '🏆', desc: 'لغة متخصصة للمهندسين والأطباء والمديرين التنفيذيين.' },
+      { title: 'التواصل المتقدم', level: 'متقدم – إتقان', icon: '⭐', desc: 'صقّل طلاقتك وأتقن أساليب التعبير الراقية.' },
+    ],
+    features: [
+      { icon: '🎓', title: 'مدرّسون معتمدون', desc: 'تعلّم من متخصصين مؤهّلين وذوي خبرة في الإنجليزية البريطانية.' },
+      { icon: '📱', title: 'تعلّم مرن', desc: 'ادرس بوتيرتك الخاصة — صفوف أونلاين أو حضورية.' },
+      { icon: '🌍', title: 'مجتمع عالمي', desc: 'انضم إلى طلاب من أكثر من ٤٠ دولة في جلسات تفاعلية.' },
+      { icon: '📜', title: 'شهادات معترف بها', desc: 'احصل على شهادات يقدّرها أصحاب العمل والمؤسسات حول العالم.' },
+    ],
+  },
 }
 
-function formatDate(val: string) {
-  if (!val) return '—'
-  return new Date(val + 'T00:00:00').toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  })
-}
-
-// ── SVG Components ────────────────────────────────────────────────────────────
-function UKFlag({ coral = false }: { coral?: boolean }) {
-  const accent = coral ? '#D4796A' : '#C8102E'
-  const bg = coral ? '#5B8DB8' : '#012169'
-  return (
-    <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
-      <rect width="60" height="40" fill={bg} />
-      <line x1="0" y1="0" x2="60" y2="40" stroke="white" strokeWidth="7" />
-      <line x1="60" y1="0" x2="0" y2="40" stroke="white" strokeWidth="7" />
-      <line x1="0" y1="0" x2="60" y2="40" stroke={accent} strokeWidth="4" />
-      <line x1="60" y1="0" x2="0" y2="40" stroke={accent} strokeWidth="4" />
-      <rect x="0" y="14" width="60" height="12" fill="white" />
-      <rect x="24" y="0" width="12" height="40" fill="white" />
-      <rect x="0" y="15.5" width="60" height="9" fill={accent} />
-      <rect x="25.5" y="0" width="9" height="40" fill={accent} />
-    </svg>
-  )
-}
-
-function BritStripSvg() {
-  return (
-    <svg viewBox="0 0 800 22" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-      <rect width="800" height="22" fill="#012169" />
-      <line x1="0" y1="0" x2="800" y2="22" stroke="white" strokeWidth="7" />
-      <line x1="800" y1="0" x2="0" y2="22" stroke="white" strokeWidth="7" />
-      <line x1="0" y1="0" x2="800" y2="22" stroke="#C8102E" strokeWidth="4" />
-      <line x1="800" y1="0" x2="0" y2="22" stroke="#C8102E" strokeWidth="4" />
-      <rect x="0" y="7" width="800" height="8" fill="white" />
-      <rect x="0" y="8.5" width="800" height="5" fill="#C8102E" />
-    </svg>
-  )
-}
-
-// ── Password Overlay ──────────────────────────────────────────────────────────
-function PasswordOverlay({ onUnlock }: { onUnlock: () => void }) {
-  const [value, setValue] = useState('')
-  const [error, setError] = useState('')
-  const [shake, setShake] = useState(false)
-
-  function check() {
-    if (value === '198541') {
-      onUnlock()
-    } else {
-      setShake(true)
-      setError('Incorrect password. Please try again.')
-      setValue('')
-      setTimeout(() => { setShake(false); setError('') }, 2500)
-    }
-  }
-
-  function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') check()
-  }
-
-  return (
-    <div className="pw-overlay">
-      <div className="pw-box">
-        <div className="pw-flag"><UKFlag /></div>
-        <div className="pw-title">English Future</div>
-        <div className="pw-sub">Certificate Generator</div>
-        <input
-          className={`pw-input${shake ? ' error' : ''}`}
-          type="password"
-          maxLength={6}
-          placeholder="••••"
-          autoComplete="off"
-          value={value}
-          onChange={e => { setValue(e.target.value); setShake(false) }}
-          onKeyDown={onKeyDown}
-        />
-        <button className="pw-btn" onClick={check}>Unlock</button>
-        <div className="pw-error">{error}</div>
-      </div>
-    </div>
-  )
-}
-
-// ── Certificate Preview ───────────────────────────────────────────────────────
-interface CertProps {
-  name: string
-  course: string
-  level: string
-  issueDate: string
-  certId: string
-  flash: boolean
-}
-
-function Certificate({ name, course, level, issueDate, certId, flash }: CertProps) {
-  return (
-    <div className={`cert-wrap${flash ? ' flash' : ''}`}>
-      <div id="certificate">
-        <div className="cert-border" />
-        <div className="brit-strip brit-strip-top"><BritStripSvg /></div>
-        <div className="brit-strip brit-strip-bot"><BritStripSvg /></div>
-
-        <div className="cert-inner">
-          <div className="cert-header">
-            <div className="cert-flag"><UKFlag coral /></div>
-            <div className="cert-brand">
-              English Future<br />
-              <span style={{ fontFamily: 'var(--font-open-sans)', fontWeight: 400, fontSize: 13, color: '#6B4226' }}>
-                School of English
-              </span>
-            </div>
-          </div>
-
-          <hr className="hline" />
-          <div className="cert-title">Certificate</div>
-          <div className="cert-sub">of Completion</div>
-          <hr className="hline" />
-
-          <div className="cert-to">This Certificate is Proudly Presented to</div>
-          <div className={`cert-name${!name ? ' placeholder' : ''}`}>
-            {name || 'Student Name Here'}
-          </div>
-
-          <div className="cert-body-txt">for successfully completing all requirements of the</div>
-
-          <div className="cert-course-row">
-            <span className="cert-star">★</span>
-            <span className="cert-course">{course}</span>
-            <span className="cert-star">★</span>
-          </div>
-
-          <div className="cert-meta">
-            <div className="cert-meta-item">
-              <span className="cert-meta-lbl">Level</span>
-              <span className="cert-meta-val">{level}</span>
-            </div>
-            <div className="cert-meta-item">
-              <span className="cert-meta-lbl">Date of Issue</span>
-              <span className="cert-meta-val">{formatDate(issueDate)}</span>
-            </div>
-            <div className="cert-meta-item">
-              <span className="cert-meta-lbl">Certificate ID</span>
-              <span className="cert-meta-val">{certId}</span>
-            </div>
-          </div>
-
-          <div className="cert-sigs">
-            <div className="cert-sig">
-              <div className="cert-sig-line" />
-              <div className="cert-sig-name">Mohammed Salim</div>
-              <div className="cert-sig-role">Course Instructor</div>
-            </div>
-            <div className="cert-sig">
-              <div className="cert-sig-line" />
-              <div className="cert-sig-name">English Future</div>
-              <div className="cert-sig-role">Director</div>
-            </div>
-          </div>
-
-          <div className="cert-footer">
-            English Future · Certificate ID: {certId}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Main Page ─────────────────────────────────────────────────────────────────
-const COURSES = [
-  'Advanced English Communication',
-  'Business English Mastery',
-  'Academic English Writing',
-  'Conversational English',
-  'IELTS Preparation Course',
-  'English for Professionals',
-  'English from Zero',
+const LANG_OPTIONS: { code: Lang; label: string; flag: string }[] = [
+  { code: 'ru', label: 'RU', flag: '🇷🇺' },
+  { code: 'en', label: 'EN', flag: '🇬🇧' },
+  { code: 'ar', label: 'AR', flag: '🇸🇦' },
 ]
 
-const LEVELS = ['Beginner', 'Elementary', 'Intermediate', 'Upper-Intermediate', 'Advanced', 'Proficiency']
+function UKFlag() {
+  return (
+    <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: '100%', display: 'block' }}>
+      <rect width="60" height="40" fill="#5B8DB8" />
+      <line x1="0" y1="0" x2="60" y2="40" stroke="white" strokeWidth="7" />
+      <line x1="60" y1="0" x2="0" y2="40" stroke="white" strokeWidth="7" />
+      <line x1="0" y1="0" x2="60" y2="40" stroke="#D4796A" strokeWidth="4" />
+      <line x1="60" y1="0" x2="0" y2="40" stroke="#D4796A" strokeWidth="4" />
+      <rect x="0" y="14" width="60" height="12" fill="white" />
+      <rect x="24" y="0" width="12" height="40" fill="white" />
+      <rect x="0" y="15.5" width="60" height="9" fill="#D4796A" />
+      <rect x="25.5" y="0" width="9" height="40" fill="#D4796A" />
+    </svg>
+  )
+}
 
-export default function Home() {
-  const [unlocked, setUnlocked] = useState(false)
-  const [name, setName] = useState('')
-  const [course, setCourse] = useState(COURSES[0])
-  const [level, setLevel] = useState('Intermediate')
-  const [issueDate, setIssueDate] = useState('')
-  const [certId, setCertId] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [printing, setPrinting] = useState(false)
-  const [flash, setFlash] = useState(false)
-
-  useEffect(() => {
-    setIssueDate(new Date().toISOString().split('T')[0])
-    setCertId(genCertId())
-  }, [])
-
-  async function buildPDF() {
-    const html2canvas = (await import('html2canvas')).default
-    const { jsPDF } = await import('jspdf')
-
-    const certEl = document.getElementById('certificate') as HTMLElement
-    if (!certEl) return null
-
-    const origRadius = certEl.style.borderRadius
-    const origOverflow = certEl.style.overflow
-    const origBackground = certEl.style.background
-    certEl.style.borderRadius = '0'
-    certEl.style.overflow = 'visible'
-    certEl.style.background = '#ffffff'
-
-    const canvas = await html2canvas(certEl, {
-      scale: 4,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-    })
-
-    certEl.style.borderRadius = origRadius
-    certEl.style.overflow = origOverflow
-    certEl.style.background = origBackground
-
-    const imgData = canvas.toDataURL('image/jpeg', 1.0)
-
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-    const W = pdf.internal.pageSize.getWidth()
-    const H = pdf.internal.pageSize.getHeight()
-
-    pdf.setFillColor(255, 255, 255)
-    pdf.rect(0, 0, W, H, 'F')
-
-    const certW = W - 20
-    const certH = certW / 1.414
-    const xOff = 10
-    const yOff = (H - certH) / 2
-
-    pdf.addImage(imgData, 'JPEG', xOff, yOff, certW, certH)
-    return pdf
-  }
-
-  async function generatePDF() {
-    if (loading || printing) return
-    setLoading(true)
-    try {
-      const pdf = await buildPDF()
-      if (!pdf) return
-      pdf.save(`EnglishFuture_Certificate_${(name || 'Student').replace(/\s+/g, '_')}.pdf`)
-      setFlash(true)
-      setTimeout(() => setFlash(false), 700)
-    } catch (e) {
-      console.error(e)
-      alert('Error generating PDF: ' + (e as Error).message)
-    }
-    setLoading(false)
-  }
-
-  async function printPDF() {
-    if (loading || printing) return
-    setPrinting(true)
-    try {
-      const pdf = await buildPDF()
-      if (!pdf) return
-      const blobUrl = pdf.output('bloburl') as unknown as string
-      const win = window.open(blobUrl)
-      if (win) win.onload = () => win.print()
-    } catch (e) {
-      console.error(e)
-      alert('Error printing PDF: ' + (e as Error).message)
-    }
-    setPrinting(false)
-  }
+export default function HomePage() {
+  const [lang, setLang] = useState<Lang>('ru')
+  const t = T[lang]
 
   return (
-    <>
-      {!unlocked && <PasswordOverlay onUnlock={() => setUnlocked(true)} />}
+    <div className="lp-root" dir={t.dir}>
 
-      <div className="page-wrap">
-        {/* ── FORM ── */}
-        <div className="form-panel">
-          <div className="brand">
-            <div className="flag-mini"><UKFlag coral /></div>
-            <div className="brand-text">
-              <h2>English Future</h2>
-              <span>Certificate Generator</span>
+      {/* ── NAV ── */}
+      <nav className="lp-nav">
+        <div className="lp-nav-inner">
+          <div className="lp-nav-logo">
+            <div className="lp-nav-flag"><UKFlag /></div>
+            <div>
+              <div className="lp-nav-brand">English Future</div>
+              <div className="lp-nav-tagline">{t.schoolOf}</div>
             </div>
           </div>
+          <div className="lp-nav-links">
+            <a href="#courses">{t.navCourses}</a>
+            <a href="#why">{t.navWhy}</a>
 
-          <h1>Create a Student<br />Certificate</h1>
-          <p className="subtitle">
-            Fill in the details to generate a personalized English Future certificate
-            and download it instantly as a PDF.
-          </p>
-
-          <div className="field-group">
-            <label>Student Full Name</label>
-            <input
-              type="text"
-              placeholder="e.g. Anna Petrova"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              autoComplete="off"
-            />
-          </div>
-
-          <div className="row-2">
-            <div className="field-group">
-              <label>Course</label>
-              <select value={course} onChange={e => setCourse(e.target.value)}>
-                {COURSES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+            {/* Language switcher */}
+            <div className="lp-lang-switcher">
+              {LANG_OPTIONS.map(o => (
+                <button
+                  key={o.code}
+                  className={`lp-lang-btn${lang === o.code ? ' active' : ''}`}
+                  onClick={() => setLang(o.code)}
+                >
+                  {o.flag} {o.label}
+                </button>
+              ))}
             </div>
-            <div className="field-group">
-              <label>Level</label>
-              <select value={level} onChange={e => setLevel(e.target.value)}>
-                {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </div>
-          </div>
 
-          <div className="row-2">
-            <div className="field-group">
-              <label>Instructor</label>
-              <input
-                type="text"
-                value="Mohammed Salim"
-                readOnly
-                style={{ opacity: 0.45, cursor: 'not-allowed' }}
-              />
-            </div>
-            <div className="field-group">
-              <label>Date of Issue</label>
-              <input
-                type="date"
-                value={issueDate}
-                onChange={e => setIssueDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="field-group">
-            <label>Institution</label>
-            <input
-              type="text"
-              value="English Future"
-              readOnly
-              style={{ opacity: 0.45, cursor: 'not-allowed' }}
-            />
-          </div>
-
-          <div className="btn-row">
-            <button className="btn-generate" onClick={generatePDF} disabled={loading}>
-              {loading
-                ? <div className="loader" />
-                : <span>⬇ &nbsp; Download PDF</span>
-              }
-            </button>
-
-            <button className="btn-print" onClick={printPDF} disabled={printing || loading}>
-              {printing ? <div className="loader" /> : '🖨 \u00a0 Print'}
-            </button>
+            <Link href="/certificate" className="lp-nav-cta">{t.navCert}</Link>
           </div>
         </div>
+      </nav>
 
-        {/* ── PREVIEW ── */}
-        <div className="preview-panel">
-          <div className="preview-label">Live Preview</div>
-          <Certificate
-            name={name}
-            course={course}
-            level={level}
-            issueDate={issueDate}
-            certId={certId}
-            flash={flash}
-          />
-          <p className="preview-note">Preview updates live as you type</p>
+      {/* ── HERO ── */}
+      <section className="lp-hero">
+        <div className="lp-hero-bg" aria-hidden="true">
+          <div className="lp-hero-circle lp-hero-circle-1" />
+          <div className="lp-hero-circle lp-hero-circle-2" />
+          <div className="lp-hero-circle lp-hero-circle-3" />
         </div>
-      </div>
-    </>
+        <div className="lp-hero-content">
+          <div className="lp-hero-badge">{t.badge}</div>
+          <h1 className="lp-hero-title">
+            {t.heroLine1}<br />
+            <span className="lp-hero-accent">English Future</span>
+          </h1>
+          <p className="lp-hero-sub">{t.heroSub}</p>
+          <div className="lp-hero-btns">
+            <a href="#courses" className="lp-btn-primary">{t.heroCta1}</a>
+            <Link href="/certificate" className="lp-btn-secondary">{t.heroCta2}</Link>
+          </div>
+        </div>
+        <div className="lp-hero-visual">
+          <div className="lp-hero-card">
+            <div className="lp-hero-card-flag"><UKFlag /></div>
+            <div className="lp-hero-card-quote">{t.quote}</div>
+            <div className="lp-hero-card-author">{t.quoteAuthor}</div>
+          </div>
+          <div className="lp-hero-floats">
+            <div className="lp-float">{t.float1}</div>
+            <div className="lp-float">{t.float2}</div>
+            <div className="lp-float">{t.float3}</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── STATS ── */}
+      <section className="lp-stats">
+        <div className="lp-stats-inner">
+          <div className="lp-stat"><div className="lp-stat-num">500+</div><div className="lp-stat-lbl">{t.stat1lbl}</div></div>
+          <div className="lp-stat-divider" />
+          <div className="lp-stat"><div className="lp-stat-num">7</div><div className="lp-stat-lbl">{t.stat2lbl}</div></div>
+          <div className="lp-stat-divider" />
+          <div className="lp-stat"><div className="lp-stat-num">6</div><div className="lp-stat-lbl">{t.stat3lbl}</div></div>
+          <div className="lp-stat-divider" />
+          <div className="lp-stat"><div className="lp-stat-num">98%</div><div className="lp-stat-lbl">{t.stat4lbl}</div></div>
+        </div>
+      </section>
+
+      {/* ── COURSES ── */}
+      <section className="lp-section" id="courses">
+        <div className="lp-section-inner">
+          <div className="lp-section-header">
+            <div className="lp-section-eyebrow">{t.coursesEyebrow}</div>
+            <h2 className="lp-section-title">{t.coursesTitle}</h2>
+            <p className="lp-section-sub">{t.coursesSub}</p>
+          </div>
+          <div className="lp-courses-grid">
+            {t.courses.map(c => (
+              <div key={c.title} className="lp-course-card">
+                <div className="lp-course-icon">{c.icon}</div>
+                <div className="lp-course-level">{c.level}</div>
+                <div className="lp-course-title">{c.title}</div>
+                <div className="lp-course-desc">{c.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHY US ── */}
+      <section className="lp-section lp-section-alt" id="why">
+        <div className="lp-section-inner">
+          <div className="lp-section-header">
+            <div className="lp-section-eyebrow">{t.whyEyebrow}</div>
+            <h2 className="lp-section-title">{t.whyTitle}</h2>
+            <p className="lp-section-sub">{t.whySub}</p>
+          </div>
+          <div className="lp-features-grid">
+            {t.features.map(f => (
+              <div key={f.title} className="lp-feature-card">
+                <div className="lp-feature-icon">{f.icon}</div>
+                <div className="lp-feature-title">{f.title}</div>
+                <div className="lp-feature-desc">{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA BANNER ── */}
+      <section className="lp-cta-banner">
+        <div className="lp-cta-inner">
+          <h2 className="lp-cta-title">{t.ctaTitle}</h2>
+          <p className="lp-cta-sub">{t.ctaSub}</p>
+          <Link href="/certificate" className="lp-btn-primary lp-btn-large">{t.ctaBtn}</Link>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="lp-footer">
+        <div className="lp-footer-inner">
+          <div className="lp-footer-logo">
+            <div className="lp-footer-flag"><UKFlag /></div>
+            <div>
+              <div className="lp-footer-brand">English Future</div>
+              <div className="lp-footer-tagline">{t.schoolOf}</div>
+            </div>
+          </div>
+          <div className="lp-footer-copy">{t.footerCopy}</div>
+        </div>
+      </footer>
+
+    </div>
   )
 }

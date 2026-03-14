@@ -16,8 +16,8 @@ const openSans = Open_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'English Future – Certificate Generator',
-  description: 'Generate personalized English Future certificates',
+  title: 'English Future – Школа английского языка',
+  description: 'Профессиональные курсы английского от начального до продвинутого уровня. Международно признанные сертификаты.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
