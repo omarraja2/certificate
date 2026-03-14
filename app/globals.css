@@ -266,6 +266,25 @@ select option { background: #2A5E6E; }
   min-height: 100vh;
 }
 
+/* ── TOP BAR ── */
+.lp-topbar {
+  background: rgba(0,0,0,0.25);
+  border-bottom: 1px solid rgba(126,200,216,0.1);
+  font-size: 12px;
+}
+.lp-topbar-inner {
+  max-width: 1100px; margin: 0 auto;
+  padding: 8px 32px;
+  display: flex; align-items: center; justify-content: flex-end; gap: 16px;
+}
+.lp-topbar-item {
+  display: flex; align-items: center; gap: 6px;
+  color: rgba(232,244,248,0.6); text-decoration: none; font-weight: 600;
+  transition: color 0.2s;
+}
+.lp-topbar-item:hover { color: #7EC8D8; }
+.lp-topbar-sep { width: 1px; height: 14px; background: rgba(255,255,255,0.15); }
+
 /* ── NAV ── */
 .lp-nav {
   position: sticky; top: 0; z-index: 100;
@@ -495,10 +514,18 @@ select option { background: #2A5E6E; }
   max-width: 1100px; margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
 }
+.lp-footer-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .lp-footer-logo { display: flex; align-items: center; gap: 12px; }
 .lp-footer-flag { width: 40px; height: 27px; border-radius: 3px; overflow: hidden; opacity: 0.7; }
 .lp-footer-brand { font-family: var(--font-merriweather), serif; font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.7); }
 .lp-footer-tagline { font-size: 9px; color: rgba(255,255,255,0.25); letter-spacing: 2px; text-transform: uppercase; }
+.lp-footer-contact { display: flex; align-items: center; gap: 20px; }
+.lp-footer-link {
+  display: flex; align-items: center; gap: 6px;
+  color: rgba(232,244,248,0.45); text-decoration: none;
+  font-size: 13px; font-weight: 600; transition: color 0.2s;
+}
+.lp-footer-link:hover { color: #7EC8D8; }
 .lp-footer-copy { font-size: 12px; color: rgba(255,255,255,0.22); }
 
 /* ── RESPONSIVE ── */
