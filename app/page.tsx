@@ -269,7 +269,7 @@ export default function Home() {
     try {
       const pdf = await buildPDF()
       if (!pdf) return
-      const blobUrl = pdf.output('bloburl') as string
+      const blobUrl = pdf.output('bloburl') as unknown as string
       const win = window.open(blobUrl)
       if (win) win.onload = () => win.print()
     } catch (e) {
