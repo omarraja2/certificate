@@ -194,13 +194,14 @@ export default function Home() {
   const [course, setCourse] = useState(COURSES[0])
   const [level, setLevel] = useState('Intermediate')
   const [issueDate, setIssueDate] = useState('')
-  const [certId] = useState(genCertId)
+  const [certId, setCertId] = useState('')
   const [loading, setLoading] = useState(false)
   const [printing, setPrinting] = useState(false)
   const [flash, setFlash] = useState(false)
 
   useEffect(() => {
     setIssueDate(new Date().toISOString().split('T')[0])
+    setCertId(genCertId())
   }, [])
 
   async function buildPDF() {
@@ -212,18 +213,21 @@ export default function Home() {
 
     const origRadius = certEl.style.borderRadius
     const origOverflow = certEl.style.overflow
+    const origBackground = certEl.style.background
     certEl.style.borderRadius = '0'
     certEl.style.overflow = 'visible'
+    certEl.style.background = '#ffffff'
 
     const canvas = await html2canvas(certEl, {
       scale: 4,
       useCORS: true,
-      backgroundColor: '#5AAFC0',
+      backgroundColor: '#ffffff',
       logging: false,
     })
 
     certEl.style.borderRadius = origRadius
     certEl.style.overflow = origOverflow
+    certEl.style.background = origBackground
 
     const imgData = canvas.toDataURL('image/jpeg', 1.0)
 
@@ -231,7 +235,7 @@ export default function Home() {
     const W = pdf.internal.pageSize.getWidth()
     const H = pdf.internal.pageSize.getHeight()
 
-    pdf.setFillColor(90, 175, 192)
+    pdf.setFillColor(255, 255, 255)
     pdf.rect(0, 0, W, H, 'F')
 
     const certW = W - 20
